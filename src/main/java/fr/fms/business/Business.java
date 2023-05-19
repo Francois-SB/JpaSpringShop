@@ -76,5 +76,7 @@ public interface Business {
 	 * @param la categorie à sppr
 	 * @return true si ok
 	 */
-	public boolean deleteOneCategory(Category category);	
+	public boolean deleteOneCategory(Category category);
+
+	ArrayList<Category> readCategories();	
 }

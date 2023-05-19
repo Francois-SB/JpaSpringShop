@@ -74,7 +74,10 @@ public class BusinessImpl implements Business{
 			return false;
 		}
 	}
-
+	@Override
+	public ArrayList<Category> readCategories() {
+		return (ArrayList<Category>) categoryRepository.findAll();
+	}
 	@Override
 	public Category readOneCategory(long id) {
 		Optional<Category> optional = categoryRepository.findById(id);
