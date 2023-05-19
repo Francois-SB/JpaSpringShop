@@ -3,6 +3,8 @@ package fr.fms;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter.DEFAULT;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -68,25 +70,27 @@ public class SpringJpaShopApplication implements CommandLineRunner {
 			choice = Integer.parseInt(scanTmp);
 			scan.nextLine();
 			switch(choice) {
+			case 0 : displayArticles();				
+			break;
 			case 1 : displayOneArticle();				
 			break;					
 			case 2 : addArticle(); //addArticle();
 			break;					
-			case 3 : System.out.println("removeArticle");//removeArticle();
+			case 3 : removeArticle();//removeArticle();
 			break;					
-			case 4 : System.out.println("modifyArticle");//modifyArticle();
+			case 4 : modifyArticle();//modifyArticle();
 			break;						
 			case 5 : displayArticlesByCategoryId();//displayArticlesByCategoryId;
 			break;
 			case 6 : displayCategories();//displayCategories();
 			break;
-			case 7 : System.out.println("displayOneCategory");//displayOneCategory();
+			case 7 : displayOneCategory();//displayOneCategory();
 			break;
-			case 8 : System.out.println("addCategory");//addCategory();
+			case 8 : addCategory();//addCategory();
 			break;	
-			case 9 : System.out.println("removeCategory");//removeCategory();
+			case 9 : removeCategory();//removeCategory();
 			break;
-			case 10: System.out.println("modifyCategory");//modifyCategory();
+			case 10: modifyCategory();//modifyCategory();
 			break;
 			case 11 : System.out.println("à bientôt dans notre boutique :)");
 			break;
@@ -101,6 +105,7 @@ public class SpringJpaShopApplication implements CommandLineRunner {
 	public static void displayMenu() {
 		System.out.print(TEXT_BLUE + "Menu");
 		System.out.println("\n" + "Pour réaliser une action, tapez le code correspondant");
+		System.out.println("0 : display articles");
 		System.out.println("1 : Afficher un article");
 		System.out.println("2 : Ajouter un article en base");
 		System.out.println("3 : Retirer un article en base");
@@ -112,8 +117,9 @@ public class SpringJpaShopApplication implements CommandLineRunner {
 		System.out.println("9 : Retirer une categorie en base");
 		System.out.println("10 : Modifier une categorie en base");
 		System.out.println("11 : sortir de l'application");
+		
 	}
-	private void displayOneArticle() {
+	private void displayOneArticle() {//TODO exception not working
 		System.out.println("displayOneArticle");
 		int id = scanInt();
 		System.out.println("INT ID ; "+id);
@@ -128,6 +134,14 @@ public class SpringJpaShopApplication implements CommandLineRunner {
 		System.out.println(article);
 		
 	}
+	
+
+	private void displayOneCategory() {//TODO pas de null return 
+		int id = scanInt();
+		System.out.println( business.readOneCategory((long)id)!=null ? business.readOneCategory((long)id) : "pas de cat pour cet id");
+		
+	}
+	
 	private void displayArticlesByCategoryId() {
 		displayCategories();
 		System.out.println("saisissez l'id de la catégorie concerné");
@@ -199,7 +213,18 @@ public class SpringJpaShopApplication implements CommandLineRunner {
 			
 		
 	}
-	public void updateArticle() {
+	public void addCategory() {
+		Category category = new Category();
+		System.out.println("CatName :");
+		String name = scan.nextLine();
+		category.setName(name);
+
+		//save TODO test save ok ?
+		business.addOneCategory(category);
+
+	}
+	
+	public void modifyArticle() {//TODO
 		//select art
 		System.out.println("Selectionner l'id de l'article à modifier");
 		int id = scanInt();
@@ -207,7 +232,45 @@ public class SpringJpaShopApplication implements CommandLineRunner {
 		if(article != null) {
 			//modify
 			System.out.println(article);
+			System.out.println("1 - desc | 2 - marque | 3 - prix | 4 - categorie");
 			//choix attribut à moif TODO
+			String otherChange = "o";
+			while (otherChange.equalsIgnoreCase("o")) {
+		
+				int change = scanInt();
+					switch (change) {
+					case 1:System.out.println("Description :");
+					String descString = scan.nextLine();
+					article.setDescription(descString);
+						
+						break;
+						
+					case 2:System.out.println("Marque :");
+					String brandString = scan.nextLine();
+					article.setBrand(brandString);
+						
+						break;
+					case 3:System.out.println("Prix :");
+					double priceString = Double.parseDouble(scan.nextLine());
+					article.setPrice(priceString);
+						
+						break;
+					case 4:for (Category category : business.readCategories()) {
+						System.out.println(category);	
+						}
+						System.out.println("Category :");
+						int catInt = scanInt();
+						Category newcategory = business.readOneCategory((long)catInt);
+						article.setCategory(newcategory);	
+						break;
+	
+					default:System.out.println("Jacques ?");
+						break;
+					}
+				System.out.println(article);
+				System.out.println("Souhaitez vous effectuer une autre modification ? [o/n]");
+				otherChange=scan.nextLine();
+			}
 			//maj bdd
 			try {
 				business.updateOneArticle(article);
@@ -216,6 +279,68 @@ public class SpringJpaShopApplication implements CommandLineRunner {
 			}
 		}
 		else System.out.println("l'article que vous souhaitez ajouter n'existe pas, pb de saisi id");
+		System.out.println(article+" MAJ done.");
+	}
+	
+	public void modifyCategory() {//TODO
+		//select art
+		System.out.println("Selectionner l'id de la cat à modifier");
+		int id = scanInt();
+		Category category = business.readOneCategory((long)id);
+		if(category != null) {
+			//modify
+			System.out.println(category);
+			
+			//choix attribut à moif TODO
+			String otherChange = "n";
+			while (otherChange.equalsIgnoreCase("n")) {
+
+				System.out.println("Name :");
+				String nameNew = scan.nextLine();
+				category.setName(nameNew);
+
+				System.out.println(category);
+				System.out.println("Valider la modification ? [o/n]");
+				otherChange=scan.nextLine();
+			}
+			//maj bdd
+			try {
+				business.updateOneCategory(category);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		else System.out.println("l'article que vous souhaitez ajouter n'existe pas, pb de saisi id");
+		System.out.println(category+" MAJ done.");
+	}
+	
+	public void removeArticle() {
+		System.out.println("Selectionner l'id de l'article à supprimer du panier");
+		int id = scanInt();
+		try {
+			Article article = business.readOneArticle((long)id);
+			business.deleteOneArticle(article);
+			System.out.println("article d'id "+id+" supprimé");
+			displayArticles();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			System.out.println("Id non valide");
+		}
+
+	}
+	public void removeCategory() {
+		System.out.println("Selectionner l'id de la cat à supprimer du panier");
+		int id = scanInt();
+		try {
+			Category category = business.readOneCategory((long)id);
+			business.deleteOneCategory(category);
+			//TODO confirmation
+			System.out.println("article d'id "+id+" supprimé");
+			displayArticles();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			System.out.println("Id non valide");
+		}
 
 	}
 }
